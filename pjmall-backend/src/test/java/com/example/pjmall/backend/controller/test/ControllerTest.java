@@ -22,7 +22,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
+
+import com.example.pjmall.backend.domain.User;
+import com.google.gson.Gson;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -57,9 +61,11 @@ public class ControllerTest {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>(); 
 		params.add("grant_type", "password");
 		params.add("client_id", "pjmall");
-		params.add("username", "test");
+		
+		params.add("username", "pjmall");
 		params.add("password", "1234");
-		params.add("scope", "read");
+		
+		params.add("scope", "MALL_USER");
 		
 		ResultActions resultActions =
 		mockMvc
@@ -73,6 +79,8 @@ public class ControllerTest {
 		String resultString = resultActions.andReturn().getResponse().getContentAsString();
 		JacksonJsonParser jsonParser = new JacksonJsonParser();
 		accessToken = jsonParser.parseMap(resultString).get("access_token").toString();
+	
+	
 	}
 	
 	@Ignore
@@ -85,12 +93,26 @@ public class ControllerTest {
 	}
 	
 	@Test
-	public void testHelloAuthorized() throws Exception {
+	public void testGetAuthorized() throws Exception {
 		mockMvc
 			.perform(
 				get("/hello")
 				.header("Authorization", "Bearer " + accessToken))
 			.andDo(print())
 			.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testPostAuthorized() throws Exception {
+		User user = new User(1L, "skok1025@naver.com", "1234");
+		
+		mockMvc
+		.perform(
+				post("/hello2")
+				.header("Authorization", "Bearer " + accessToken)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(new Gson().toJson(user)))
+		.andDo(print())
+		.andExpect(status().isOk());
 	}
 }
